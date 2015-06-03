@@ -25,9 +25,7 @@ but massively condensed for sanity.
 '''
 
 import bpy
-from bpy.props import (
-    StringProperty,
-)
+from bpy.props import StringProperty
 
 import sverchok
 from sverchok.menu import make_node_cats
@@ -52,7 +50,7 @@ def layout_draw_categories(layout, node_details):
     add_n_grab = 'node.add_node'
     for node_info in node_details:
         num_items = len(node_info)
-        if not num_items in {2, 3}:
+        if not (num_items in {2, 3}):
             print(repr(node_info), 'is incomplete, or unparsable')
             continue
 
@@ -209,6 +207,9 @@ def register():
         kmi = km.keymap_items.new('wm.call_menu', 'SPACE', 'PRESS', ctrl=True)
         kmi.properties.name = "NODEVIEW_MT_Dynamic_Menu"
 
+        kmi = km.keymap_items.new('wm.call_menu_pie', 'A', 'PRESS', ctrl=True)
+        kmi.properties.name = "NODEVIEW_MT_PIE_Menu"
+
 
 def unregister():
     for class_name in classes:
@@ -219,7 +220,8 @@ def unregister():
     if kc:
         km = kc.keymaps['Node Editor']
         for kmi in km.keymap_items:
-            if kmi.idname == 'wm.call_menu':
-                if kmi.properties.name == "NODEVIEW_MT_Dynamic_Menu":
+            if kmi.idname in ('wm.call_menu', 'wm.call_menu_pie'):
+                added_items = ("NODEVIEW_MT_Dynamic_Menu", "NODEVIEW_MT_PIE_Menu")
+                if kmi.properties.name in added_items:
                     km.keymap_items.remove(kmi)
                     break
