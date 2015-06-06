@@ -50,6 +50,7 @@ class NODEVIEW_MT_PIE_Menu(Menu):
         pie = layout.menu_pie()
         pie.operator_enum("nodes.pie_menu_enum", "selected_mode")
         pie.operator("object.add", icon_value=ICON).type = 'EMPTY'
+        pie.menu("NODEVIEW_MT_AddGeneratorsExt", icon='PLUGIN')
 
 
 def register():
