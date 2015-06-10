@@ -2,6 +2,7 @@ import bpy
 import bpy.utils.previews
 from bpy.types import Menu, Operator
 import os
+import time
 
 preview_collections = {}
 
@@ -11,16 +12,10 @@ class NODEVIEW_PE_SV_ops(Operator):
     bl_idname = "nodes.pie_menu_enum"
     bl_label = "Add Quick Node"
 
-    pcoll = preview_collections.get("main")
-    if pcoll:
-        ICON = pcoll["vec_icon"].icon_id
-    else:
-        ICON = 'CURVE_DATA'
-
     mode_options = [
-        ("option1", "option1", "", ICON, 0),
+        ("option1", "option1", "", 'CURVE_DATA', 0),
         ("option2", "option2", "", "", 1),
-        ("option3", "option3", "", "", 2)
+        ("Prefs", "Prefs", "", "PREFERENCES", 2)
     ]
 
     selected_mode = bpy.props.EnumProperty(
@@ -31,6 +26,28 @@ class NODEVIEW_PE_SV_ops(Operator):
 
     def execute(self, context):
         print('added ', self.selected_mode)
+        import bpy
+
+        if self.selected_mode == 'Prefs':
+            import addon_utils
+
+            module_name = "sverchok"
+            addon_utils.modules_refresh()
+
+            bpy.ops.screen.userpref_show("INVOKE_DEFAULT")
+            bpy.context.user_preferences.active_section = "ADDONS"
+            bpy.data.window_managers['WinMan'].addon_search = "sverch"
+
+            try:
+                mod = addon_utils.addons_fake_modules.get(module_name)
+                info = addon_utils.module_bl_info(mod)
+                if not info["show_expanded"]:
+                    info["show_expanded"] = True
+            except:
+                import traceback
+                traceback.print_exc()
+                return {'CANCELLED'}
+
         return {'FINISHED'}
 
 
@@ -40,30 +57,13 @@ class NODEVIEW_MT_PIE_Menu(Menu):
 
     def draw(self, context):
         layout = self.layout
-
-        pcoll = preview_collections.get("main")
-        if pcoll:
-            ICON = pcoll["vec_icon"].icon_id
-        else:
-            ICON = 'CURVE_DATA'
-
         pie = layout.menu_pie()
         pie.operator_enum("nodes.pie_menu_enum", "selected_mode")
-        pie.operator("object.add", icon_value=ICON).type = 'EMPTY'
+        pie.operator("object.add", icon='CURVE_DATA').type = 'EMPTY'
         pie.menu("NODEVIEW_MT_AddGeneratorsExt", icon='PLUGIN')
 
 
 def register():
-    pcoll = bpy.utils.previews.new()
-
-    # path to the folder where the icon is
-    # the path is calculated relative to this py file inside the addon folder
-    my_icons_dir = os.path.join(os.path.dirname(__file__), "icons")
-
-    # load a preview thumbnail of a file and store in the previews collection
-    pcoll.load("vec_icon", os.path.join(my_icons_dir, "VEC_IMG.png"), 'IMAGE')
-    preview_collections["main"] = pcoll
-
     bpy.utils.register_class(NODEVIEW_PE_SV_ops)
     bpy.utils.register_class(NODEVIEW_MT_PIE_Menu)
 
